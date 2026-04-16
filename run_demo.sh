@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "======================================"
+echo " SDN Path Tracing Tool Demo Launcher"
+echo "======================================"
+echo ""
+echo "Cleaning up any old Mininet instances..."
+sudo mn -c
+
+echo ""
+echo "Starting Mininet with custom topology in the background..."
+echo "To interact with Mininet later, you can attach to the screen session if desired, but we will keep it simple here."
+echo ""
+echo "Wait! It's actually better to run Ryu and Mininet in separate visible terminals."
+echo ""
+echo "Please open two terminals and run:"
+echo ""
+echo "Terminal 1 (Ryu Controller):"
+echo "  ryu-manager --observe-links path_tracer.py"
+echo ""
+echo "Terminal 2 (Mininet):"
+echo "  sudo mn --custom topo.py --topo pathtopo --mac --switch ovsk --controller remote"
+echo ""
+echo "Follow the README.md instructions for more details."
+echo "======================================"
