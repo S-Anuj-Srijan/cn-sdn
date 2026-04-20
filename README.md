@@ -3,10 +3,10 @@
 This project implements a path tracing tool where an SDN controller (Ryu) computes the shortest path between hosts, installs OpenFlow rules along the path dynamically, and logs the chosen route. 
 
 ## Requirements
-- A Linux VM (e.g., Ubuntu)
-- Mininet
-- Open vSwitch (OVS)
-- Ryu SDN Framework
+- **Kali Linux VM** (Environment already configured)
+- **Mininet 2.3.1b4** (Installed from source)
+- **Open vSwitch 3.7.1** (Configured for OpenFlow 1.3)
+- **Ryu 4.34** (Successfully patched for Python 3.13 compatibility)
 
 ## High-Level Features
 - **Topology Discovery:** The controller automatically learns links and switch locations using Ryu's topology API.
@@ -16,40 +16,67 @@ This project implements a path tracing tool where an SDN controller (Ryu) comput
 
 ---
 
-## 1. How to Run the Demo
-
-You will need **two terminal windows** in your VM.
-
-### Terminal 1: Start the Ryu Controller
-You must run the controller with the `--observe-links` flag so it can discover the topology.
-```bash
-# Clean previous mininet states to be safe
-sudo mn -c
-
-# Start the controller
-ryu-manager --observe-links path_tracer.py
-```
-
-### Terminal 2: Start Mininet with the Custom Topology
-Our custom topology (`topo.py`) provides 4 switches and 4 hosts with multiple possible paths.
-
-```bash
-# Start mininet using the custom topology, OVS switch, and remote learning
-sudo mn --custom topo.py --topo pathtopo --mac --switch ovsk --controller remote
-```
-*Note: The `--mac` flag ensures that hosts have easy-to-read MAC addresses (like `00:00:00:00:00:01` for `h1`), which makes the controller logs much more readable.*
+## 0. Environment Setup (Pre-configured)
+This project has been specially configured to run on **Python 3.13** on Kali Linux. The following fixes were applied:
+- **Ryu Source Patch**: `ryu/hooks.py` was patched to remove legacy `easy_install` dependencies.
+- **Dependency Modernization**: `eventlet` (0.41.0) and `dnspython` (2.8.0) were force-upgraded to support modern built-ins like `TimeoutError`.
+- **Global Path**: Services like `mn` and `ryu-manager` are installed and ready to use for the `root` user.
 
 ---
 
-## 2. Generating Traffic and Viewing the Path
+## 1. How to Run (Automated)
 
-Inside the Mininet terminal (`mininet>`), test the connectivity:
+The easiest way to run the demo is using the provided `launch.sh` script. This script uses `tmux` to automatically split your terminal and start both the Ryu controller and Mininet concurrently.
 
 ```bash
-mininet> pingall
+# Make the script executable (if needed)
+chmod +x launch.sh
+
+# Run the automated demo
+./launch.sh
 ```
 
-When you do this, look at **Terminal 1 (Ryu)**. You will see output like this explaining the selected paths:
+---
+
+## 2. Manual Verification
+
+If you prefer to run the components manually in two separate terminal windows:
+
+### Terminal 1: Start the Ryu Controller
+```bash
+# Clean previous mininet states
+sudo mn -c
+
+# Start the controller
+cd ~/Desktop/cn-sdn
+ryu-manager --observe-links path_tracer.py
+```
+
+### Terminal 2: Start Mininet
+```bash
+sudo mn --custom topo.py --topo pathtopo --mac --switch ovsk --controller remote
+```
+
+---
+
+## 3. Verification & Demo Results
+
+### Connectivity Check
+Inside the Mininet terminal, running `pingall` results in **0% packet loss**, confirming that the controller has successfully installed all necessary flow rules.
+
+```text
+mininet> pingall
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 
+h2 -> h1 h3 h4 
+h3 -> h1 h2 h4 
+h4 -> h1 h2 h3 
+*** Results: 0% dropped (12/12 received)
+```
+
+### Path discovery Logs
+The Ryu controller log demonstrates real-time path discovery. When traffic is initiated between `h1` and `h4`, the controller computes the shortest path using BFS and logs the route:
+
 ```text
 ====================================
 ROUTE DISCOVERED
@@ -58,14 +85,9 @@ Path: (00:00:00:00:00:01) -> S1 -> S2 -> S4 -> (00:00:00:00:00:04)
 ====================================
 ```
 
-Try testing specifically from `h1` to `h4`:
-```bash
-mininet> h1 ping -c 3 h4
-```
-
 ---
 
-## 3. Validating the Path (OVS Tracing)
+## 4. Validating the Path (OVS Tracing)
 
 As part of your project, you need to validate that the OpenFlow layer is doing exactly what Ryu instructed.
 
