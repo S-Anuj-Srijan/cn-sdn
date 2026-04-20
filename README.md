@@ -77,6 +77,8 @@ h4 -> h1 h2 h3
 ### Path discovery Logs
 The Ryu controller log demonstrates real-time path discovery. When traffic is initiated between `h1` and `h4`, the controller computes the shortest path using BFS and logs the route:
 
+![Ryu and Mininet Startup](screenshots/ryu_mininet_start.png)
+
 ```text
 ====================================
 ROUTE DISCOVERED
@@ -84,6 +86,8 @@ Flow: 00:00:00:00:00:01 -> 00:00:00:00:00:04
 Path: (00:00:00:00:00:01) -> S1 -> S2 -> S4 -> (00:00:00:00:00:04)
 ====================================
 ```
+
+![Path Discovery Results](screenshots/path_discovery_results.png)
 
 ---
 
